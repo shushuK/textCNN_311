@@ -82,7 +82,8 @@ def read_labels():
         f_in_name = line.strip()
         label = re.split(r"[/,.]", f_in_name)[-2]
         cateList.add(label)
-    categories = [x for x in cateList]
+    # categories = [x for x in cateList]
+    categories = sorted([x for x in cateList])
     cat_to_id = dict(zip(categories, range(len(categories))))
 
     return categories, cat_to_id

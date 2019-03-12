@@ -15,8 +15,8 @@ class TCNNConfig(object):
 
     hidden_dim = 128
 
-    dropout_keep_prob = 0.5
-    learning_rate = 0.0003
+    dropout_keep_prob = 0.75
+    learning_rate = 0.01
 
     batch_size = 64
     num_epochs = 5

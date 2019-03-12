@@ -1,6 +1,5 @@
 #!usr/bin/python3
 #-*- coding:utf-8 -*
-import datetime
 import os
 import sys
 import time
@@ -8,9 +7,6 @@ from datetime import timedelta
 from prepare_data import process_file, read_vocab, batch_iter, build_vocab, read_labels
 import tensorflow as tf
 from cnn_model import TCNNConfig, TextCNN
-import numpy as np
-from sklearn import metrics
-
 
 
 def get_timeUsed(start_time):
@@ -29,8 +25,7 @@ def feed_data(x_batch, y_batch, droupout_keep_prob):
 
 def evaluate(sessionn, x, y):
     data_len = len(x)
-    # print(data_len, "&^*&^*&^*&^*^&*")
-    batch_eval = batch_iter(x, y, 64)
+    batch_eval = batch_iter(x, y, config.batch_size)
     lossResult = 0
     accResult = 0
     for x_batch, y_batch in batch_eval:
@@ -39,8 +34,6 @@ def evaluate(sessionn, x, y):
         loss, acc = sessionn.run([model.loss, model.acc], feed_dict=feed_dict)
         lossResult += loss * batch_len
         accResult += acc * batch_len
-        # print(acc, "_________")
-        # print(accResult,"&&&&&&&&&")
 
     return lossResult/data_len, accResult/data_len
 
@@ -61,8 +54,8 @@ def train():
 
     print('loading training data')
     start_time = time.time()
-    x_train, y_train = process_file('toy_val.txt', 'vocab200k_5000.txt', 200)
-    x_val, y_val = process_file('toy_test.txt', 'vocab200k_5000.txt', 200)
+    x_train, y_train = process_file(training_dir, vocab_dir, config.seq_length)
+    x_val, y_val = process_file(test_dir, vocab_dir, config.seq_length)
     timeUsed = get_timeUsed(start_time)
     print('time used:', timeUsed)
 
@@ -98,8 +91,8 @@ def train():
                     feed_dict[model.keep_prob] = 1.0
                     loss_train, acc_train = sess.run([model.loss, model.acc], feed_dict=feed_dict)
                     loss_val, acc_val = evaluate(sess, x_val, y_val)
-                    if True:
-                    # if acc_val > best_acc_val:
+
+                    if acc_val > best_acc_val:
                         best_acc_val = acc_val
                         last_improved = total_batch
                         save_path = saver.save(sess=sess, save_path=save_path)
@@ -107,7 +100,6 @@ def train():
                         improved_str = '*'
                         print("model saved...")
                     else:
-                        print('sbsbsb')
                         improved_str = ''
 
                     msg = 'iter: {}, train loss: {}, train acc: {}, val loss:{}, val acc:{}, improved_str:{}'
@@ -127,20 +119,10 @@ def train():
 
 def test():
     print('loading test data...')
-    start_time = time.time()
-    x_test, y_test = process_file('toy_val.txt', 'vocab200k_5000.txt', 200)
-
-    # session2 = tf.Session()
-    # session2.run(tf.global_variables_initializer())
+    x_test, y_test = process_file(test_dir, vocab_dir, config.seq_length)
     with tf.Session() as sess:
         saver = tf.train.Saver()
         sess.run(tf.global_variables_initializer())
-        save_dir = 'checkpoints0310/textcnn'
-        save_path = os.path.join(save_dir, 'best_val')
-        loss_test, acc_test = evaluate(sess, x_test, y_test)
-        msg = 'test loss:{}, test acc:{}'
-        print(msg.format(loss_test, acc_test))
-
         saver.restore(sess=sess, save_path=tf.train.latest_checkpoint('./checkpoints0310/textcnn'))
 
         print('testing...')
@@ -148,40 +130,26 @@ def test():
         msg = 'test loss:{}, test acc:{}'
         print(msg.format(loss_test, acc_test))
 
-        # batch_size = config.batch_size
-        # data_len = len(x_test)
-        # num_batch = int((data_len - 1) / batch_size) + 1
-        # y_test_cls = np.argmax(y_test, 1) # array
-        # y_pre_cls = np.zeros(shape=len(x_test), dtype=np.int32)
-        total_correction = 0
-        # for i in range(num_batch):
-        #     startId = i * batch_size
-        #     endId = min((i+1) * batch_size, data_len)
-        # feed_dict = {
-        #     model.input_x: x_test,
-        #     model.keep_prob: 1.0
-        # }
-        # y_pre_cls = session.run(model.y_pred_cls, feed_dict=feed_dict)
-        # correct_predictions = float(np.mean(y_test_cls == y_pre_cls))
-        # print(correct_predictions)
-        # total_correction += correct_predictions
-            # print(i)
-        # print(y_pre_cls[0: 10])
-        # print(y_test_cls[0:10])
-            # print(y_test_cls[startId: endId])
-        # print('acc:{}'.format(total_correction/float(len(y_test_cls))))
-
 
 if __name__ == '__main__':
-    if not os.path.exists('vocab200k_5000.txt'):
-        build_vocab('toy_train.txt', 'vocab200k_5000.txt', 10000)
+    # vocab_dir = 'vocab_20k.txt'
+    # training_dir = 'train_200k.txt'
+    # test_dir = 'test_20k.txt'
+    # val_dir = 'val_20k.txt'
     config = TCNNConfig()
     model = TextCNN(config)
-    # create session
+
+    vocab_dir = 'vocab200k_5000.txt'
+    training_dir = 'toy_train.txt'
+    test_dir = 'toy_test.txt'
+    val_dir = 'toy_val.txt'
+
+    if not os.path.exists(vocab_dir):
+        build_vocab(training_dir, vocab_dir, config.vocab_size)
 
     # if sys.argv[1] == 'train':
     #     train()
     # else:
     #     test()
-    # train()
+    train()
     test()
