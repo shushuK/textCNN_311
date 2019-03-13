@@ -13,7 +13,7 @@ import pickle
 def read_file(f_name):
 
     contents, labels = [], []
-    with open(f_name, 'r', encoding='utf8') as f:
+    with open(f_name, 'r', encoding='utf-8', errors='ignore') as f:
         for line in f:
             try:
                 label, content = line.strip().split('\t')
@@ -82,7 +82,6 @@ def read_labels():
         f_in_name = line.strip()
         label = re.split(r"[/,.]", f_in_name)[-2]
         cateList.add(label)
-    # categories = [x for x in cateList]
     categories = sorted([x for x in cateList])
     cat_to_id = dict(zip(categories, range(len(categories))))
 

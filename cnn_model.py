@@ -7,21 +7,21 @@ import numpy as np
 class TCNNConfig(object):
 
     embedding_dim = 300
-    seq_length = 200
+    seq_length = 100
     num_classes = 25
     num_filters = 128
-    kernel_size = 3
+    kernel_size = 4
     vocab_size = 10000
 
     hidden_dim = 128
 
     dropout_keep_prob = 0.75
-    learning_rate = 0.01
+    learning_rate = 0.0003
 
     batch_size = 64
-    num_epochs = 5
+    num_epochs = 10
 
-    print_per_batch = 5
+    print_per_batch = 10
     save_per_batch = 10
 
 
@@ -39,7 +39,6 @@ class TextCNN(object):
     def cnn(self):
         with tf.device('/cpu:0'):
             embedding = tf.get_variable('embedding', [self.config.vocab_size, self.config.embedding_dim], trainable=True)
-            # embedding = tf.Variable(tf.random_uniform([self.config.vocab_size, self.config.embedding_dim], -1.0, 1.0), name='embedding')
             embedding_inputs = tf.nn.embedding_lookup(embedding, self.input_x)
 
         with tf.name_scope("cnn"):
@@ -55,8 +54,7 @@ class TextCNN(object):
             fc = tf.nn.relu(fc)
 
             self.logits = tf.layers.dense(fc, self.config.num_classes, name='fc2')
-            self.y_pred_cls = tf.argmax(tf.nn.softmax(self.logits), 1) # output: index of the max probability in predicted array
-
+            self.y_pred_cls = tf.argmax(tf.nn.softmax(self.logits), 1)
         with tf.name_scope("optimize"):
             cross_entropy = tf.nn.softmax_cross_entropy_with_logits(logits=self.logits, labels=self.input_y)
             self.loss = tf.reduce_mean(cross_entropy)

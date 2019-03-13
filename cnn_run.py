@@ -1,7 +1,6 @@
 #!usr/bin/python3
 #-*- coding:utf-8 -*
 import os
-import sys
 import time
 from datetime import timedelta
 from prepare_data import process_file, read_vocab, batch_iter, build_vocab, read_labels
@@ -132,10 +131,7 @@ def test():
 
 
 if __name__ == '__main__':
-    # vocab_dir = 'vocab_20k.txt'
-    # training_dir = 'train_200k.txt'
-    # test_dir = 'test_20k.txt'
-    # val_dir = 'val_20k.txt'
+
     config = TCNNConfig()
     model = TextCNN(config)
 
@@ -143,6 +139,9 @@ if __name__ == '__main__':
     training_dir = 'toy_train.txt'
     test_dir = 'toy_test.txt'
     val_dir = 'toy_val.txt'
+
+    # if not os.path.exists('vocab200k_5000.txt'):
+    #     build_vocab('toy_train.txt', 'vocab200k_5000.txt', 10000)
 
     if not os.path.exists(vocab_dir):
         build_vocab(training_dir, vocab_dir, config.vocab_size)
